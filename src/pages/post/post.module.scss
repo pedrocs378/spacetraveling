@@ -6,9 +6,6 @@
 }
 
 .post {
-  max-width: 720px;
-  margin: 5rem auto;
-
   h1 {
     font-size: 3rem;
     letter-spacing: -0.5px;
@@ -36,4 +33,43 @@
 
 .content {
   margin-top: 4rem;
+
+  h2.headingContent {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 140%;
+  }
+
+  div.bodyContent {
+    line-height: 140%;
+    font-size: 1.125rem;
+    font-weight: 400;
+    margin: 4rem 0;
+
+    a {
+      color: var(--pink-700);
+      text-decoration: none;
+      padding: 0 0.5rem;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    strong {
+      padding: 0 0.5rem;
+    }
+
+    p, ul {
+			margin: 1.5rem 0;
+		}
+
+		ul {
+			padding-left: 1.5rem;
+
+			li {
+				margin: 0.5rem 0;
+			}
+		}
+  }
 }
