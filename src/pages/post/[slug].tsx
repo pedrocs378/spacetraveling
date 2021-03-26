@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
+import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import { useRouter } from 'next/router';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
-import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import { RichText } from 'prismic-dom';
 import Prismic from '@prismicio/client'
 import format from 'date-fns/format';
 import ptBR from 'date-fns/locale/pt-BR';
@@ -11,8 +14,6 @@ import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
-import { RichText } from 'prismic-dom';
-import { useMemo } from 'react';
 
 interface Post {
   first_publication_date: string | null;
@@ -36,6 +37,7 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps) {
+  const router = useRouter()
 
   const estimatedReadingTime = useMemo(() => {
     const totalWordsValue = post.data.content.reduce((prev, currentPost) => {
@@ -45,7 +47,13 @@ export default function Post({ post }: PostProps) {
       return prev + headingWordsLength + bodyWordsLength
     }, 0)
 
-    return Math.round(totalWordsValue / 200)
+    return Math.ceil(totalWordsValue / 200)
+  }, [post])
+
+  const publicationDate = useMemo(() => {
+    return format(new Date(post.first_publication_date), 'dd MMM yyyy', {
+      locale: ptBR
+    })
   }, [post])
 
   const content = useMemo(() => {
@@ -57,6 +65,10 @@ export default function Post({ post }: PostProps) {
       }
     })
   }, [post])
+
+  if (router.isFallback) {
+    return <p>Carregando...</p>
+  }
 
   return (
     <>
@@ -75,7 +87,7 @@ export default function Post({ post }: PostProps) {
           <div className={styles.postInfoContainer}>
             <div>
               <FiCalendar />
-              <time>{post.first_publication_date}</time>
+              <time>{publicationDate}</time>
             </div>
             <div>
               <FiUser />
@@ -91,13 +103,13 @@ export default function Post({ post }: PostProps) {
           <div className={styles.content}>
             {content.map(({ heading, body }) => {
               return (
-                <>
+                <section key={heading}>
                   <h2 className={styles.headingContent}>{heading}</h2>
                   <div
                     className={styles.bodyContent}
                     dangerouslySetInnerHTML={{ __html: body }}
                   />
-                </>
+                </section>
               )
             })}
           </div>
@@ -113,13 +125,21 @@ export const getStaticPaths: GetStaticPaths = async () => {
   const postsResponse = await prismic.query([
     Prismic.predicates.at('document.type', 'posts')
   ], {
-    fetch: ['posts.title', 'posts.subtitle', 'posts.author'],
-    pageSize: 1
+    fetch: ['posts.title'],
+    pageSize: 2
   });
 
+  const paths = postsResponse.results.map((post) => {
+    return {
+      params: {
+        slug: post.uid
+      },
+    }
+  })
+
   return {
-    paths: [],
-    fallback: 'blocking'
+    paths,
+    fallback: true,
   }
 };
 
@@ -130,13 +150,10 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
   const post = {
     ...response,
-    first_publication_date: format(new Date(response.first_publication_date), 'dd MMM yyyy', {
-      locale: ptBR
-    }),
   }
 
   return {
     props: { post },
-    revalidate: 60 * 30
+    revalidate: 1
   }
 };

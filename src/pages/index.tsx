@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FiCalendar, FiUser } from 'react-icons/fi'
 import { GetStaticProps } from 'next';
 import Link from 'next/link'
@@ -37,15 +37,8 @@ export default function Home({ postsPagination }: HomeProps) {
   const [posts, setPosts] = useState(postsPagination.results)
   const [nextPage, setNextPage] = useState(postsPagination.next_page)
 
-  async function handleLoadNextPage() {
-    if (!nextPage) {
-      return
-    }
-
-    const response = await axios.get(postsPagination.next_page)
-    const results = response.data.results as Post[]
-
-    const nextPosts = results.map(post => {
+  const postsFormatted = useMemo(() => {
+    return posts.map(post => {
       return {
         ...post,
         first_publication_date: format(new Date(post.first_publication_date), 'dd MMM yyyy', {
@@ -53,9 +46,30 @@ export default function Home({ postsPagination }: HomeProps) {
         })
       }
     })
+  }, [posts])
 
-    setPosts([...posts, ...nextPosts])
-    setNextPage(response.data.next_page)
+  async function handleLoadNextPage() {
+    if (!nextPage) {
+      return
+    }
+
+    fetch(postsPagination.next_page)
+      .then(response => response.json())
+      .then(data => {
+        const results = data.results as Post[]
+
+        const nextPosts = results.map(post => {
+          return {
+            ...post,
+            first_publication_date: format(new Date(post.first_publication_date), 'dd MMM yyyy', {
+              locale: ptBR
+            })
+          }
+        })
+
+        setPosts([...posts, ...nextPosts])
+        setNextPage(data.next_page)
+      })
   }
 
   return (
@@ -68,7 +82,7 @@ export default function Home({ postsPagination }: HomeProps) {
         <img src="/svg/logo.svg" alt="logo" />
 
         <div className={styles.posts}>
-          {posts.map(post => {
+          {postsFormatted.map(post => {
 
             return (
               <Link key={post.uid} href={`/post/${post.uid}`}>
@@ -127,7 +141,7 @@ export const getStaticProps: GetStaticProps = async () => {
 
   return {
     props: {
-      postsPagination,
+      postsPagination: postsResponse,
     },
     revalidate: 60 * 30
   }
