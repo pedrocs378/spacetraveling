@@ -127,18 +127,6 @@ export const getStaticProps: GetStaticProps = async () => {
     pageSize: 1
   });
 
-  const postsPagination = {
-    next_page: postsResponse.next_page,
-    results: postsResponse.results.map(post => {
-      return {
-        ...post,
-        first_publication_date: format(new Date(post.first_publication_date), 'dd MMM yyyy', {
-          locale: ptBR
-        })
-      }
-    })
-  }
-
   return {
     props: {
       postsPagination: postsResponse,

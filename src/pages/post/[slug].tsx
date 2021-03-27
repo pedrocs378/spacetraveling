@@ -14,9 +14,11 @@ import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+import Link from 'next/link';
 
 interface Post {
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     banner: {
@@ -56,6 +58,16 @@ export default function Post({ post }: PostProps) {
     })
   }, [post])
 
+  const updatedAt = useMemo(() => {
+    if (post.first_publication_date !== post.last_publication_date) {
+      return format(new Date(post.last_publication_date), "dd MMM yyyy', às' HH:mm", {
+        locale: ptBR
+      })
+    } else {
+      return null
+    }
+  }, [post])
+
   const content = useMemo(() => {
     return post.data.content.map(content => {
 
@@ -85,18 +97,23 @@ export default function Post({ post }: PostProps) {
         <article className={`${commonStyles.commonContainer} ${styles.post}`}>
           <h1>{post.data.title}</h1>
           <div className={styles.postInfoContainer}>
-            <div>
-              <FiCalendar />
-              <time>{publicationDate}</time>
+            <div className={styles.postInfo}>
+              <div>
+                <FiCalendar />
+                <time>{publicationDate}</time>
+              </div>
+              <div>
+                <FiUser />
+                <p>{post.data.author}</p>
+              </div>
+              <div>
+                <FiClock />
+                <p>{estimatedReadingTime} min</p>
+              </div>
             </div>
-            <div>
-              <FiUser />
-              <p>{post.data.author}</p>
-            </div>
-            <div>
-              <FiClock />
-              <p>{estimatedReadingTime} min</p>
-            </div>
+            {updatedAt && (
+              <em>* editado em {updatedAt}</em>
+            )}
           </div>
 
 
@@ -113,8 +130,24 @@ export default function Post({ post }: PostProps) {
               )
             })}
           </div>
-
         </article>
+
+        <div className={`${commonStyles.commonContainer} ${styles.divider}`} />
+
+        <div className={`${commonStyles.commonContainer} ${styles.postNavigation}`}>
+          <div>
+            <p>Como utilizar hooks</p>
+            <Link href="#">
+              <a>Post anterior</a>
+            </Link>
+          </div>
+          <div>
+            <p>Criando um app CRA do zero</p>
+            <Link href="#">
+              <a>Próximo post</a>
+            </Link>
+          </div>
+        </div>
       </main>
     </>
   )
@@ -148,12 +181,10 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
 
-  const post = {
-    ...response,
-  }
+  console.log(response.first_publication_date === response.last_publication_date)
 
   return {
-    props: { post },
+    props: { post: response },
     revalidate: 1
   }
 };

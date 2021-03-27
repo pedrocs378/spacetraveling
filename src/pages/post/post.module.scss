@@ -13,10 +13,19 @@
 }
 
 .postInfoContainer {
+  color: var(--gray-300);
+
+  > em {
+    display: block;
+    font-size: 0.875rem;
+    margin-top: 1rem;
+  }
+}
+
+.postInfo {
   display: flex;
   align-items: center;
   margin-top: 1.5rem;
-  color: var(--gray-300);
 
   div {
     display: flex;
@@ -71,5 +80,40 @@
 				margin: 0.5rem 0;
 			}
 		}
+  }
+}
+
+.divider {
+  height: 1px;
+  width: 100%;
+  background: var(--gray-200);
+  opacity: 0.1;
+}
+
+.postNavigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  div {
+    p {
+      font-size: 1.125rem;
+    }
+
+    a {
+      color: var(--pink-700);
+      font-weight: 600;
+      text-decoration: none;
+      display: block;
+      margin-top: 0.5rem;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  div:last-child {
+    text-align: right;
   }
 }
