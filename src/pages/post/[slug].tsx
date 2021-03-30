@@ -3,18 +3,19 @@ import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
 import { RichText } from 'prismic-dom';
 import Prismic from '@prismicio/client'
 import format from 'date-fns/format';
 import ptBR from 'date-fns/locale/pt-BR';
 
-import Header from '../../components/Header';
+import { Header } from '../../components/Header';
+import { Comments } from '../../components/Comments';
 
 import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
-import Link from 'next/link';
 
 interface Post {
   first_publication_date: string | null;
@@ -36,9 +37,10 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  preview: boolean
 }
 
-export default function Post({ post }: PostProps) {
+export default function Post({ post, preview }: PostProps) {
   const router = useRouter()
 
   const estimatedReadingTime = useMemo(() => {
@@ -89,6 +91,7 @@ export default function Post({ post }: PostProps) {
       </Head>
 
       <Header />
+
       <main className={styles.container}>
         <img
           src={post.data.banner.url}
@@ -148,6 +151,16 @@ export default function Post({ post }: PostProps) {
             </Link>
           </div>
         </div>
+
+        <Comments />
+
+        {preview && (
+          <aside>
+            <Link href="/api/exit-preview">
+              <a>Sair do modo Preview</a>
+            </Link>
+          </aside>
+        )}
       </main>
     </>
   )
@@ -176,15 +189,15 @@ export const getStaticPaths: GetStaticPaths = async () => {
   }
 };
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getStaticProps: GetStaticProps = async ({ params, preview = false, previewData }) => {
   const { slug } = params
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID('posts', String(slug), {});
-
-  console.log(response.first_publication_date === response.last_publication_date)
+  const response = await prismic.getByUID('posts', String(slug), {
+    ref: previewData?.ref ?? null
+  });
 
   return {
-    props: { post: response },
+    props: { post: response, preview },
     revalidate: 1
   }
 };
