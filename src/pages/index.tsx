@@ -4,7 +4,6 @@ import { GetStaticProps } from 'next';
 import Link from 'next/link'
 import Head from 'next/head';
 import Prismic from '@prismicio/client'
-import axios from 'axios'
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 
@@ -12,7 +11,6 @@ import { getPrismicClient } from '../services/prismic';
 
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
-import { RichText } from 'prismic-dom';
 
 interface Post {
   uid?: string;

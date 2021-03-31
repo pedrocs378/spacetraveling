@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import ReactLoading from 'react-loading'
 import { useRouter } from 'next/router';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
@@ -35,15 +36,26 @@ interface Post {
   };
 }
 
+interface PaginationPost {
+  uid: string
+  title: string
+}
+
 interface PostProps {
   post: Post;
   preview: boolean
+  nextPost: PaginationPost
+  prevPost: PaginationPost
 }
 
-export default function Post({ post, preview }: PostProps) {
+export default function Post({ post, preview, prevPost, nextPost }: PostProps) {
   const router = useRouter()
 
   const estimatedReadingTime = useMemo(() => {
+    if (!post) {
+      return
+    }
+
     const totalWordsValue = post.data.content.reduce((prev, currentPost) => {
       const headingWordsLength = currentPost.heading?.split(' ').length ?? 0
       const bodyWordsLength = RichText.asText(currentPost.body).split(' ').length
@@ -55,12 +67,20 @@ export default function Post({ post, preview }: PostProps) {
   }, [post])
 
   const publicationDate = useMemo(() => {
+    if (!post) {
+      return
+    }
+
     return format(new Date(post.first_publication_date), 'dd MMM yyyy', {
       locale: ptBR
     })
   }, [post])
 
   const updatedAt = useMemo(() => {
+    if (!post) {
+      return
+    }
+
     if (post.first_publication_date !== post.last_publication_date) {
       return format(new Date(post.last_publication_date), "dd MMM yyyy', às' HH:mm", {
         locale: ptBR
@@ -71,6 +91,10 @@ export default function Post({ post, preview }: PostProps) {
   }, [post])
 
   const content = useMemo(() => {
+    if (!post) {
+      return
+    }
+
     return post.data.content.map(content => {
 
       return {
@@ -81,7 +105,16 @@ export default function Post({ post, preview }: PostProps) {
   }, [post])
 
   if (router.isFallback) {
-    return <p>Carregando...</p>
+    return (
+      <div className={styles.loading}>
+        <ReactLoading
+          type="bubbles"
+          color="var(--pink-700)"
+          height={80}
+          width={80}
+        />
+      </div>
+    )
   }
 
   return (
@@ -138,18 +171,22 @@ export default function Post({ post, preview }: PostProps) {
         <div className={`${commonStyles.commonContainer} ${styles.divider}`} />
 
         <div className={`${commonStyles.commonContainer} ${styles.postNavigation}`}>
-          <div>
-            <p>Como utilizar hooks</p>
-            <Link href="#">
-              <a>Post anterior</a>
-            </Link>
-          </div>
-          <div>
-            <p>Criando um app CRA do zero</p>
-            <Link href="#">
-              <a>Próximo post</a>
-            </Link>
-          </div>
+          {prevPost && (
+            <div className={styles.previousPost}>
+              <p>{prevPost.title}</p>
+              <Link href={`/post/${prevPost.uid}`}>
+                <a>Post anterior</a>
+              </Link>
+            </div>
+          )}
+          {nextPost && (
+            <div className={styles.nextPost}>
+              <p>{nextPost.title}</p>
+              <Link href={`/post/${nextPost.uid}`}>
+                <a>Próximo post</a>
+              </Link>
+            </div>
+          )}
         </div>
 
         <Comments />
@@ -172,7 +209,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     Prismic.predicates.at('document.type', 'posts')
   ], {
     fetch: ['posts.title'],
-    pageSize: 2
+    pageSize: 1
   });
 
   const paths = postsResponse.results.map((post) => {
@@ -196,8 +233,39 @@ export const getStaticProps: GetStaticProps = async ({ params, preview = false, 
     ref: previewData?.ref ?? null
   });
 
+  const postsBeforeResponse = await prismic.query([
+    Prismic.predicates.dateBefore('document.first_publication_date', response.first_publication_date)
+  ], {
+    fetch: ['posts.title'],
+    pageSize: 1,
+    ref: previewData?.ref ?? null
+  });
+
+  const postsAfterResponse = await prismic.query([
+    Prismic.predicates.dateAfter('document.first_publication_date', response.first_publication_date)
+  ], {
+    fetch: ['posts.title'],
+    pageSize: 1,
+    ref: previewData?.ref ?? null
+  });
+
+  const nextPost = postsAfterResponse.results.length !== 0 && {
+    uid: postsAfterResponse.results[0].uid,
+    title: postsAfterResponse.results[0].data.title,
+  }
+
+  const prevPost = postsBeforeResponse.results.length !== 0 && {
+    uid: postsBeforeResponse.results[0].uid,
+    title: postsBeforeResponse.results[0].data.title,
+  }
+
   return {
-    props: { post: response, preview },
+    props: {
+      post: response,
+      preview,
+      nextPost,
+      prevPost
+    },
     revalidate: 1
   }
 };

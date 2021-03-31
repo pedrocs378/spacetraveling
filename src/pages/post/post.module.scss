@@ -119,11 +119,11 @@
 .postNavigation {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 
   div {
     p {
       font-size: 1.125rem;
+      max-width: 25rem;
     }
 
     a {
@@ -139,7 +139,19 @@
     }
   }
 
-  div:last-child {
+  div.previousPost {
+    margin-right: auto;
+  }
+
+  div.nextPost{
+    margin-left: auto;
     text-align: right;
   }
+}
+
+.loading {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
