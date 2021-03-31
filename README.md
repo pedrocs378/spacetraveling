@@ -27,15 +27,15 @@ O layout deste projeto pode ser acessado através [desse link](https://www.figma
 
 2. Após criar uma conta e um projeto novo, é necessário criar um documento repetível `posts` com 8 campos:
 
-* **slug**: UID
-* **title**: Key Text
-* **subtitle**: Key Text
-* **author**: Key Text
-* **banner**: Image
-* **content**: Group
-** Campos internos:
-*** **heading**: Key Text
-*** **body**: Rich Text
+* **slug**: UID;
+* **title**: Key Text;
+* **subtitle**: Key Text;
+* **author**: Key Text;
+* **banner**: Image;
+* **content**: Group;
+  * Campos internos:
+    * **heading**: Key Text
+    * **body**: Rich Text
 
 3. Após criar uma conta, é necessário adicionar dentro do arquivo `.env.local` a váriavel `PRISMIC_API_ENDPOINT` com a url da API.
 
