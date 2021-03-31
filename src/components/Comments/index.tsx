@@ -8,7 +8,7 @@ export function Comments() {
     script.setAttribute("src", "https://utteranc.es/client.js");
     script.setAttribute("crossorigin", "anonymous");
     script.async = true
-    script.setAttribute("repo", "spacetraveling-comments");
+    script.setAttribute("repo", "pedrocs378/spacetraveling-comments");
     script.setAttribute("issue-term", "pathname");
     script.setAttribute("label", "blog-comment");
     script.setAttribute("theme", "github-dark");
